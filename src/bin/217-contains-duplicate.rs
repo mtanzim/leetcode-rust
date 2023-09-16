@@ -21,8 +21,6 @@ impl Solution {
     }
 }
 
-
-
 // @lc code=end
 struct Solution;
 fn main() {
@@ -30,7 +28,7 @@ fn main() {
     println!("{}", res)
 }
 #[cfg(test)]
-mod tests {
+mod tests_contains_dup {
 
     #[test]
     fn basic_contqains_dup() {
