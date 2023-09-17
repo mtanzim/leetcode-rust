@@ -1,4 +1,4 @@
-# [leetcode-rust](https://doc.rust-lang.org/rust-by-example/primitives.html)
+# leetcode-rust
 
 ## Why
 
