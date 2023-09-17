@@ -2,4 +2,5 @@
 
 ## Why
 
-- Still getting rusty, let's try learning with some challenges
+- Getting rusty, let's try learning rust with some challenges
+- Also see [leetcode solutions in Go](https://github.com/mtanzim/leetcode-go)
