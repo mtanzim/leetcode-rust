@@ -4,7 +4,6 @@
  * [242] Valid Anagram
  */
 
-struct Solution;
 // @lc code=start
 impl Solution {
     pub fn is_anagram(s: String, t: String) -> bool {
@@ -12,7 +11,7 @@ impl Solution {
     }
 }
 // @lc code=end
-
+struct Solution;
 fn main() {
     let res = Solution::is_anagram("hello".to_owned(), "jello".to_owned());
     println!("{}", res)
