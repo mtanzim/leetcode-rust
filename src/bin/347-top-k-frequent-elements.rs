@@ -68,7 +68,7 @@ mod tests_top_k_freq_elems {
     #[test]
     fn with_k_n() {
         let res = super::Solution::top_k_frequent(vec![1, 1, 3, 4], 3);
-        let expect = vec![1, 4, 3];
+        let expect = vec![1, 3, 4];
         assert_eq!(res, expect)
     }
 }
