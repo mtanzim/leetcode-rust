@@ -51,11 +51,12 @@ impl Solution {
     fn traverse(node: Option<Rc<RefCell<TreeNode>>>, cur_height: i32) -> i32 {
         match node {
             None => cur_height,
-            Some(node) => {
+            Some(node_rc) => {
                 let next_height = cur_height + 1;
-                let lh = Self::traverse(Rc::try_unwrap(node).unwrap().borrow().left, next_height);
-                let rh = Self::traverse(Rc::try_unwrap(node).unwrap().borrow().right, next_height);
-                return lh.max(rh);
+                let next_node = node_rc.borrow();
+                let lh = Self::traverse(next_node.left.clone(), next_height);
+                let rh = Self::traverse(next_node.right.clone(), next_height);
+                lh.max(rh)
             }
         }
     }
