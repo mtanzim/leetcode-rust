@@ -60,6 +60,61 @@ impl Solution {
             }
         }
     }
+    /// ### asked gippity: why do we use Rc and RefCell with a binary tree?
+    ///Using `Rc` (Reference Counting) and `RefCell` with a binary tree is a common pattern in Rust when you need to create a tree structure that allows for shared ownership and interior mutability.
+    ///1. **Shared Ownership (Rc)**:
+    ///   
+    ///   In a binary tree, a node may have multiple children (up to two in the case of a binary tree). Using `Rc`, you can have multiple references to the same node, allowing for shared ownership. This is useful because a node may be referenced by multiple parents (other nodes).
+    ///
+    ///2. **Interior Mutability (RefCell)**:
+    ///   
+    ///   `RefCell` allows you to achieve interior mutability, enabling you to modify the contents of a node even when you only have an immutable reference to it. This is important in a tree structure, where you might want to modify a node's children (left or right subtrees) while having an immutable reference to the node itself.
+    ///
+    ///Combining `Rc` and `RefCell`:
+    ///
+    ///- `Rc<RefCell<TreeNode>>` allows you to share a node among different parts of the program (multiple parents or references).
+    ///- `RefCell` enables you to mutate the node's content (like modifying its children) even when you only have an immutable reference to it.
+    ///
+    ///Let's take an example: you might want to modify the left and right child of a node in a binary tree. You'd use `RefCell` to allow this interior mutability, and `Rc` to share the node across different parts of the tree without transferring ownership.
+    ///
+    ///```rust
+    ///use std::cell::RefCell;
+    ///use std::rc::Rc;
+    ///#[derive(Debug)]
+    ///struct TreeNode {
+    ///    val: i32,
+    ///    left: Option<Rc<RefCell<TreeNode>>>,
+    ///    right: Option<Rc<RefCell<TreeNode>>>,
+    ///}
+    ///
+    ///fn main() {
+    ///    let left_child = Rc::new(RefCell::new(TreeNode {
+    ///        val: 2,
+    ///        left: None,
+    ///        right: None,
+    ///    }));
+    ///
+    ///    let right_child = Rc::new(RefCell::new(TreeNode {
+    ///        val: 3,
+    ///        left: None,
+    ///        right: None,
+    ///    }));
+    ///
+    ///    let root = Rc::new(RefCell::new(TreeNode {
+    ///        val: 1,
+    ///        left: Some(left_child.clone()),
+    ///        right: Some(right_child.clone()),
+    ///    }));
+    ///
+    ///    // Modify left child's value
+    ///    left_child.borrow_mut().val = 10;
+    ///
+    ///    println!("{:?}", root);
+    ///}
+    ///```
+    ///
+    ///In this example, we create a binary tree with `Rc` and `RefCell`, allowing shared ownership and interior mutability to modify the values within the tree nodes.
+    /// 
     pub fn max_depth(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
         Self::traverse(root, 0)
     }
@@ -88,13 +143,51 @@ impl TreeNode {
 }
 
 fn main() {
-    // let res = Solution::max_depth();
-    println!("{:?}", 42)
+    let left_child = Rc::new(RefCell::new(TreeNode {
+        val: 2,
+        left: None,
+        right: None,
+    }));
+
+    let right_child = Rc::new(RefCell::new(TreeNode {
+        val: 3,
+        left: None,
+        right: None,
+    }));
+
+    let root = Rc::new(RefCell::new(TreeNode {
+        val: 1,
+        left: Some(left_child.clone()),
+        right: Some(right_child.clone()),
+    }));
+    println!("{:?}", root);
+    println!("{:?}", Solution::max_depth(Some(root)));
 }
 
 mod tests {
+    use std::{cell::RefCell, rc::Rc};
+
+    use crate::{Solution, TreeNode};
+
     #[test]
     fn basic() {
-        assert_eq!(true, true);
+        let left_child = Rc::new(RefCell::new(TreeNode {
+            val: 2,
+            left: None,
+            right: None,
+        }));
+
+        let right_child = Rc::new(RefCell::new(TreeNode {
+            val: 3,
+            left: None,
+            right: None,
+        }));
+
+        let root = Rc::new(RefCell::new(TreeNode {
+            val: 1,
+            left: Some(left_child.clone()),
+            right: Some(right_child.clone()),
+        }));
+        assert_eq!(Solution::max_depth(Some(root)), 2);
     }
 }
