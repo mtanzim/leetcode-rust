@@ -7,9 +7,9 @@
 
 ## Notes
 
-Refer to the following chapters of the rust-book for a deeper understanding of the code, particularly for linked lists as well as trees
+Refer to the following chapters of the rust-book for a deeper understanding of the code, particularly for linked lists and trees:
 
 - [Smart pointers](https://doc.rust-lang.org/book/ch15-00-smart-pointers.html)
 - [Ownership](https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html)
 
-[ChatGPT](https://chat.openai.com/) was used to generate inline notes in the code as well
+[ChatGPT](https://chat.openai.com/) was used to generate inline notes in the code as well.
