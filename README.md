@@ -3,7 +3,7 @@
 ## Why
 
 - Getting rusty, let's try learning rust with some challenges
-- Also see [leetcode solutions in Go](https://github.com/mtanzim/leetcode-go)
+- Also see [leetcode solutions in Go](https://github.com/mtanzim/leetcode-go) and [leetcode solutions in TS](https://github.com/mtanzim/leetcode-ts)
 
 ## Notes
 
