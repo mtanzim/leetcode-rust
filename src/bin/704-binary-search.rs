@@ -51,11 +51,12 @@
 // @lc code=start
 impl Solution {
     pub fn search(nums: Vec<i32>, target: i32) -> i32 {
-        let mut l: usize = 0;
-        let mut r = nums.len() - 1;
+        let mut l: i32 = 0;
+        let mut r:i32 = (nums.len() - 1) as i32;
         while l <= r {
-            let mid = (l + r) / 2;
-            let val = nums[mid];
+            let mid:i32 = (l + r) / 2;
+            // TODO: how to avoid this typecast?
+            let val = nums[mid as usize];
             if target > val {
                 l = mid + 1
             } else if target < val {
@@ -97,4 +98,10 @@ mod tests {
       let target = 44;
       assert_eq!(Solution::search(nums, target), -1);
   }
+  #[test]
+  fn basic_5() {
+    let nums = vec![5];
+    let target = -5;
+    assert_eq!(Solution::search(nums, target), -1);
+}
 }
