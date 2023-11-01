@@ -122,5 +122,6 @@ mod tests {
         assert_eq!(Solution::search_matrix(matrix.clone(), 1), true);
         assert_eq!(Solution::search_matrix(matrix.clone(), 7), true);
         assert_eq!(Solution::search_matrix(matrix.clone(), 60), true);
+        assert_eq!(Solution::search_matrix(matrix.clone(), -34), false);
     }
 }
