@@ -114,7 +114,7 @@ impl Solution {
     ///```
     ///
     ///In this example, we create a binary tree with `Rc` and `RefCell`, allowing shared ownership and interior mutability to modify the values within the tree nodes.
-    /// 
+    ///
     pub fn max_depth(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
         Self::traverse(root, 0)
     }
