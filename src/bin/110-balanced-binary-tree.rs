@@ -50,54 +50,35 @@
 // @lc code=start
 
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 impl Solution {
-    fn get_heights(
-        node: Option<Rc<RefCell<TreeNode>>>,
-        cur_height: i32,
-        tracker: &mut HashMap<i32, i32>,
-    ) -> i32 {
+    fn height(node: Option<Rc<RefCell<TreeNode>>>, cur_height: i32) -> i32 {
         match node {
             None => cur_height,
             Some(node_rc) => {
                 let next_height = cur_height + 1;
                 let next_node = node_rc.borrow();
-                let lh = Self::get_heights(next_node.left.clone(), next_height, tracker);
-                let rh = Self::get_heights(next_node.right.clone(), next_height, tracker);
-                let tree_h = lh.max(rh);
-                let node_h = tree_h - cur_height;
-                tracker.insert(node_rc.borrow().val, node_h);
-                tree_h
+                let lh = Self::height(next_node.left.clone(), next_height);
+                let rh = Self::height(next_node.right.clone(), next_height);
+                lh.max(rh)
             }
         }
     }
-    fn check_balanced(node: Option<Rc<RefCell<TreeNode>>>, height_map: HashMap<i32, i32>) -> bool {
+    fn check_balanced(node: Option<Rc<RefCell<TreeNode>>>) -> bool {
         match node {
             None => true,
             Some(node_rc) => {
-                let lc = node_rc.borrow().left.clone();
-                let rc = node_rc.borrow().right.clone();
-                let lv = match lc {
-                    None => 0,
-                    Some(node) => node.borrow().val,
-                };
-                let rv = match rc {
-                    None => 0,
-                    Some(node) => node.borrow().val,
-                };
+                let lv = Self::height(node_rc.borrow().left.clone(), 0);
+                let rv = Self::height(node_rc.borrow().right.clone(), 0);
                 let delta = (lv - rv).abs();
                 delta < 2
-                    && Self::check_balanced(node_rc.borrow().left.clone(), height_map.clone())
-                    && Self::check_balanced(node_rc.borrow().right.clone(), height_map.clone())
+                    && Self::check_balanced(node_rc.borrow().left.clone())
+                    && Self::check_balanced(node_rc.borrow().right.clone())
             }
         }
     }
     pub fn is_balanced(root: Option<Rc<RefCell<TreeNode>>>) -> bool {
-        let mut height_map = HashMap::new();
-        Self::get_heights(root.clone(), 0, &mut height_map);
-        println!("{:?}", height_map);
-        Self::check_balanced(root.clone(), height_map)
+        Self::check_balanced(root.clone())
     }
 }
 // @lc code=end
@@ -140,14 +121,33 @@ fn main() {
         left: Some(left_child.clone()),
         right: Some(right_child.clone()),
     }));
-    println!("{:?}", root);
     println!("{:?}", Solution::is_balanced(Some(root)));
 }
 
 mod tests_top_k_freq_elems {
+    use std::{cell::RefCell, rc::Rc};
+
+    use crate::{Solution, TreeNode};
 
     #[test]
     fn basic() {
-        assert_eq!(true, true)
+        let left_child = Rc::new(RefCell::new(TreeNode {
+            val: 2,
+            left: None,
+            right: None,
+        }));
+
+        let right_child = Rc::new(RefCell::new(TreeNode {
+            val: 3,
+            left: None,
+            right: None,
+        }));
+
+        let root = Rc::new(RefCell::new(TreeNode {
+            val: 1,
+            left: Some(left_child.clone()),
+            right: Some(right_child.clone()),
+        }));
+        assert_eq!(true, Solution::is_balanced(Some(root)))
     }
 }
