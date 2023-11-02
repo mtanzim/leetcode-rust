@@ -65,10 +65,10 @@ impl Solution {
                 let next_node = node_rc.borrow();
                 let lh = Self::get_heights(next_node.left.clone(), next_height, tracker);
                 let rh = Self::get_heights(next_node.right.clone(), next_height, tracker);
-                let treeH = lh.max(rh);
-                let nodeH = treeH - cur_height;
-                tracker.insert(node_rc.borrow().val, nodeH);
-                treeH
+                let tree_h = lh.max(rh);
+                let node_h = tree_h - cur_height;
+                tracker.insert(node_rc.borrow().val, node_h);
+                tree_h
             }
         }
     }
@@ -76,17 +76,28 @@ impl Solution {
         match node {
             None => true,
             Some(node_rc) => {
-                let lc = node_rc.borrow().left;
-                let rc = node_rc.borrow().right;
-                let lv = lc.unwrap_or_default(0).borrow().val
+                let lc = node_rc.borrow().left.clone();
+                let rc = node_rc.borrow().right.clone();
+                let lv = match lc {
+                    None => 0,
+                    Some(node) => node.borrow().val,
+                };
+                let rv = match rc {
+                    None => 0,
+                    Some(node) => node.borrow().val,
+                };
+                let delta = (lv - rv).abs();
+                delta < 2
+                    && Self::check_balanced(node_rc.borrow().left.clone(), height_map.clone())
+                    && Self::check_balanced(node_rc.borrow().right.clone(), height_map.clone())
             }
         }
     }
     pub fn is_balanced(root: Option<Rc<RefCell<TreeNode>>>) -> bool {
         let mut height_map = HashMap::new();
-        Self::get_heights(root, 0, &mut heightMap);
-        println!("{:?}", heightMap);
-        false
+        Self::get_heights(root.clone(), 0, &mut height_map);
+        println!("{:?}", height_map);
+        Self::check_balanced(root.clone(), height_map)
     }
 }
 // @lc code=end
