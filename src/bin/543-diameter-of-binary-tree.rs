@@ -53,26 +53,28 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 impl Solution {
-    fn height(node: Option<Rc<RefCell<TreeNode>>>, max_d: RefCell<i32>) -> i32 {
+    fn traverse(node: Option<Rc<RefCell<TreeNode>>>, max_d: Rc<RefCell<i32>>) -> i32 {
         match node {
             None => -1,
             Some(node_rc) => {
-                let lh = Self::height(node_rc.borrow().left.clone(), max_d.clone()) + 1;
-                let rh = Self::height(node_rc.borrow().right.clone(), max_d.clone()) + 1;
+                let lh = Self::traverse(node_rc.borrow().left.clone(), max_d.clone()) + 1;
+                let rh = Self::traverse(node_rc.borrow().right.clone(), max_d.clone()) + 1;
                 let cur_d = lh + rh;
-                println!("Diameter: {}", cur_d);
                 let mut mut_ref = max_d.borrow_mut();
-                // Modify the value
-                *mut_ref = cur_d.max(*max_d.borrow());
+                let cur_max = *mut_ref;
+                let new_max = cur_max.max(cur_d);
+                *mut_ref = new_max;
+
                 return lh.max(rh);
             }
         }
     }
     pub fn diameter_of_binary_tree(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
-        let max_d = RefCell::new(0);
-        Self::height(root, max_d);
-        let v = *max_d.borrow();
-        v
+        let max_d = Rc::new(RefCell::new(0));
+        Self::traverse(root, max_d.clone());
+        let vc = max_d.clone();
+        let vr = vc.borrow();
+        return *vr;
     }
 }
 
