@@ -53,28 +53,21 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 impl Solution {
-    fn traverse(node: Option<Rc<RefCell<TreeNode>>>, max_d: Rc<RefCell<i32>>) -> i32 {
+    fn traverse(node: Option<Rc<RefCell<TreeNode>>>) -> (i32, i32) {
         match node {
-            None => -1,
+            None => (-1, 0),
             Some(node_rc) => {
-                let lh = Self::traverse(node_rc.borrow().left.clone(), max_d.clone()) + 1;
-                let rh = Self::traverse(node_rc.borrow().right.clone(), max_d.clone()) + 1;
+                let (lh_p, ld) = Self::traverse(node_rc.borrow().left.clone());
+                let (rh_p, rd) = Self::traverse(node_rc.borrow().right.clone());
+                let lh = lh_p + 1;
+                let rh = rh_p + 1;
                 let cur_d = lh + rh;
-                let mut mut_ref = max_d.borrow_mut();
-                let cur_max = *mut_ref;
-                let new_max = cur_max.max(cur_d);
-                *mut_ref = new_max;
-
-                return lh.max(rh);
+                return (lh.max(rh), cur_d.max(ld).max(rd));
             }
         }
     }
     pub fn diameter_of_binary_tree(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
-        let max_d = Rc::new(RefCell::new(0));
-        Self::traverse(root, max_d.clone());
-        let vc = max_d.clone();
-        let vr = vc.borrow();
-        return *vr;
+        Self::traverse(root).1
     }
 }
 
