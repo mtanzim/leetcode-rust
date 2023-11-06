@@ -63,8 +63,22 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 impl Solution {
+    fn traverse(node: Option<Rc<RefCell<TreeNode>>>, max_along_path: i32) -> i32 {
+        match node {
+            None => 0,
+            Some(node_rc) => {
+                let v = node_rc.borrow().val;
+                let is_good = v < max_along_path;
+                let new_max = v.max(max_along_path);
+                let l_count = Self::traverse(node_rc.borrow().left.clone(), new_max);
+                let r_count = Self::traverse(node_rc.borrow().right.clone(), new_max);
+                let this_count = if is_good { 0 } else { 1 };
+                return l_count + r_count + this_count;
+            }
+        }
+    }
     pub fn good_nodes(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
-        99
+        Self::traverse(root, -10_000 - 1)
     }
 }
 // @lc code=end
