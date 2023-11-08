@@ -49,7 +49,6 @@
  *
  */
 
-
 // @lc code=start
 use std::collections::HashMap;
 impl Solution {
@@ -61,18 +60,10 @@ impl Solution {
         while r < s.len() as i32 {
             let cur_c = s.chars().nth(r as usize).unwrap();
             let cur_occ = *hm.get(&cur_c).unwrap_or(&0);
-            hm.insert(cur_c, cur_occ + 1);
-            let updated_occ = *hm.get(&cur_c).unwrap_or(&0);
+            let updated_occ = cur_occ + 1;
+            hm.insert(cur_c, updated_occ);
             let cur_window_len: i32 = r - l + 1;
-            let (_, most_freq_c_occ) = hm.iter().fold((cur_c, updated_occ), |acc, (c, i)| {
-                let (_, cur_max_i) = acc;
-                if *i > cur_max_i {
-                    (*c, *i)
-                } else {
-                    acc
-                }
-            });
-
+            let most_freq_c_occ = hm.iter().map(|(_, i)| *i).max().unwrap_or(0);
             if cur_window_len - most_freq_c_occ <= k {
                 max = max.max(cur_window_len);
             } else {
