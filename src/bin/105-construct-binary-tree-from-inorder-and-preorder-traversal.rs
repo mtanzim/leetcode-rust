@@ -52,33 +52,46 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 impl Solution {
-    pub fn build_tree(preorder: Vec<i32>, inorder: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {
+    fn traverse(
+        preorder: Vec<i32>,
+        inorder: Vec<i32>,
+    ) -> (Option<Rc<RefCell<TreeNode>>>, Vec<i32>) {
         if preorder.len() == 0 || inorder.len() == 0 {
-            return None;
+            return (None, preorder.clone());
         }
-        // if preorder.len() == 1 && inorder.len() == 1 {
-        //     let v = preorder.get(0).expect("invalid traversal");
-        //     let node = TreeNode {
-        //         val: *v,
-        //         left: None,
-        //         right: None,
-        //     };
-        //     return Some(Rc::new(RefCell::new(node)));
-        // }
-        let root_val = *preorder.get(0).expect("invalid traversal");
-        let next_pre_order = preorder[1..].to_vec();
+
+        let root_val = preorder[0];
+        let next_pre_order = preorder.clone()[1..].to_vec();
         let inorder_cut = inorder
             .iter()
             .position(|&v| v == root_val)
             .expect("failed to find item in order, invalid case");
-        let left_inorder: Vec<i32> = inorder[..inorder_cut].to_vec();
-        let right_inorder: Vec<i32> = inorder[inorder_cut + 1..].to_vec();
+        let left_inorder: Vec<i32> = inorder.clone()[..inorder_cut].to_vec();
+        // println!(
+        //     "going left with node: {}, preorder: {:?}, inorder: {:?}",
+        //     root_val, next_pre_order, left_inorder
+        // );
+        let (left_tree, left_updated_pre_order) =
+            Self::traverse(next_pre_order.clone(), left_inorder.clone());
+        let right_inorder: Vec<i32> = inorder.clone()[inorder_cut + 1..].to_vec();
+        // println!(
+        //     "going right with node: {}, preorder: {:?}, inorder: {:?}",
+        //     root_val, left_updated_pre_order, left_inorder
+        // );
+        let (right_tree, right_updated_pre_order) =
+            Self::traverse(left_updated_pre_order.clone(), right_inorder.clone());
         let node = TreeNode {
             val: root_val,
-            left: Self::build_tree(next_pre_order.clone(), left_inorder),
-            right: Self::build_tree(next_pre_order.clone(), right_inorder),
+            left: left_tree,
+            right: right_tree,
         };
-        return Some(Rc::new(RefCell::new(node)));
+        let tree = Some(Rc::new(RefCell::new(node)));
+        // println!("{:?}", tree);
+        (tree, right_updated_pre_order)
+    }
+    // TODO: preorder needs to be globally mutable?
+    pub fn build_tree(preorder: Vec<i32>, inorder: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {
+        Self::traverse(preorder, inorder).0
     }
 }
 // @lc code=end
@@ -115,6 +128,13 @@ mod tests {
     fn basic1() {
         let preorder = vec![3, 9, 20, 15, 7];
         let inorder = vec![9, 3, 15, 20, 7];
+        let tree = Solution::build_tree(preorder, inorder);
+        assert_eq!(1, 1)
+    }
+    #[test]
+    fn failing1() {
+        let preorder = vec![3, 1, 2, 4];
+        let inorder = vec![1, 2, 3, 4];
         let tree = Solution::build_tree(preorder, inorder);
         assert_eq!(1, 1)
     }
