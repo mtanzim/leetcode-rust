@@ -150,6 +150,8 @@ impl Codec {
         Self::build_tree(preorder_vec, inorder_vec)
     }
 
+    // TODO: this assumes all values are unique and thus the solution does not always work
+    // ie: [3,2,4,3]
     fn buiild_tree_traverse(
         preorder: Vec<i32>,
         inorder: Vec<i32>,
