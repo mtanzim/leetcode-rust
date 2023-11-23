@@ -122,14 +122,32 @@ impl Codec {
             None => return,
             Some(node_rc) => {
                 cur_vec.borrow_mut().push(node_rc.borrow().val);
-                Self::in_order(node_rc.borrow().left.clone(), cur_vec.clone());
-                Self::in_order(node_rc.borrow().right.clone(), cur_vec.clone());
+                Self::pre_order(node_rc.borrow().left.clone(), cur_vec.clone());
+                Self::pre_order(node_rc.borrow().right.clone(), cur_vec.clone());
             }
         }
     }
 
     fn deserialize(&self, data: String) -> Option<Rc<RefCell<TreeNode>>> {
-        None
+        let splits: Vec<&str> = data.split("\n").collect();
+        let ineorder_raw = *splits.get(0).expect("failed to parse inorder raw");
+        let preorder_raw = *splits.get(1).expect("failed to parse preorder raw");
+        let inorder_clean = ineorder_raw.replace("inorder:", "");
+        let preorder_clean = preorder_raw.replace("preorder:", "");
+
+        if preorder_clean.len() == 0 || inorder_clean.len() == 0 {
+            return None;
+        }
+
+        let inorder_vec: Vec<i32> = inorder_clean
+            .split(",")
+            .map(|token| token.parse::<i32>().expect("failed to parse inorder token"))
+            .collect();
+        let preorder_vec: Vec<i32> = preorder_clean
+            .split(",")
+            .map(|token| token.parse::<i32>().expect("failed to parse inorder token"))
+            .collect();
+        Self::build_tree(preorder_vec, inorder_vec)
     }
 
     fn buiild_tree_traverse(
@@ -161,12 +179,12 @@ impl Codec {
         (tree, right_updated_pre_order)
     }
     // TODO: preorder needs to be globally mutable?
-    pub fn build_tree(preorder: Vec<i32>, inorder: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {
+    fn build_tree(preorder: Vec<i32>, inorder: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {
         Self::buiild_tree_traverse(preorder, inorder).0
     }
 }
-struct Codec;
 
+struct Codec;
 // @lc code=end
 
 /**
@@ -239,5 +257,30 @@ mod tests {
             c.serialize(Some(root.clone())),
             "inorder:1,2,3\npreorder:2,1,3".to_string()
         );
+    }
+
+    #[test]
+    fn deserialize() {
+        let left_child = Rc::new(RefCell::new(TreeNode {
+            val: 1,
+            left: None,
+            right: None,
+        }));
+
+        let right_child = Rc::new(RefCell::new(TreeNode {
+            val: 3,
+            left: None,
+            right: None,
+        }));
+
+        let root = Rc::new(RefCell::new(TreeNode {
+            val: 2,
+            left: Some(left_child.clone()),
+            right: Some(right_child.clone()),
+        }));
+        let serialized = "inorder:1,2,3\npreorder:2,1,3".to_string();
+        let tree = Some(root);
+        let c = Codec::new();
+        assert_eq!(c.deserialize(serialized), tree);
     }
 }
