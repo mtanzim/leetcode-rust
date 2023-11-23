@@ -75,12 +75,12 @@ impl TreeNode {
 
 use std::cell::RefCell;
 use std::rc::Rc;
-struct Codec {}
 
 /**
  * `&self` means the method takes an immutable reference.
  * If you need a mutable reference, change it to `&mut self` instead.
  */
+// TODO: prefer Rc::clone() as it makes it more obvious that we are cloning the "reference"
 impl Codec {
     fn new() -> Self {
         Codec {}
@@ -90,10 +90,66 @@ impl Codec {
         "sdsd".to_string()
     }
 
+    fn in_order(node: Option<Rc<RefCell<TreeNode>>>, cur_vec: Rc<RefCell<Vec<i32>>>) {
+        match node {
+            None => return,
+            Some(node_rc) => {
+                Self::in_order(node_rc.borrow().left.clone(), cur_vec.clone());
+                cur_vec.borrow_mut().push(node_rc.borrow().val);
+                Self::in_order(node_rc.borrow().right.clone(), cur_vec.clone());
+            }
+        }
+    }
+
+    fn pre_order(node: Option<Rc<RefCell<TreeNode>>>, cur_vec: Rc<RefCell<Vec<i32>>>) {
+        match node {
+            None => return,
+            Some(node_rc) => {
+                cur_vec.borrow_mut().push(node_rc.borrow().val);
+                Self::in_order(node_rc.borrow().left.clone(), cur_vec.clone());
+                Self::in_order(node_rc.borrow().right.clone(), cur_vec.clone());
+            }
+        }
+    }
+
     fn deserialize(&self, data: String) -> Option<Rc<RefCell<TreeNode>>> {
         None
     }
+
+    fn buiild_tree_traverse(
+        preorder: Vec<i32>,
+        inorder: Vec<i32>,
+    ) -> (Option<Rc<RefCell<TreeNode>>>, Vec<i32>) {
+        if preorder.len() == 0 || inorder.len() == 0 {
+            return (None, preorder.clone());
+        }
+
+        let root_val = preorder[0];
+        let next_pre_order = preorder.clone()[1..].to_vec();
+        let inorder_cut = inorder
+            .iter()
+            .position(|&v| v == root_val)
+            .expect("failed to find item in order, invalid case");
+        let left_inorder: Vec<i32> = inorder.clone()[..inorder_cut].to_vec();
+        let (left_tree, left_updated_pre_order) =
+            Self::buiild_tree_traverse(next_pre_order.clone(), left_inorder.clone());
+        let right_inorder: Vec<i32> = inorder.clone()[inorder_cut + 1..].to_vec();
+        let (right_tree, right_updated_pre_order) =
+            Self::buiild_tree_traverse(left_updated_pre_order.clone(), right_inorder.clone());
+        let node = TreeNode {
+            val: root_val,
+            left: left_tree,
+            right: right_tree,
+        };
+        let tree = Some(Rc::new(RefCell::new(node)));
+        (tree, right_updated_pre_order)
+    }
+    // TODO: preorder needs to be globally mutable?
+    pub fn build_tree(preorder: Vec<i32>, inorder: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {
+        Self::buiild_tree_traverse(preorder, inorder).0
+    }
 }
+struct Codec;
 
 // @lc code=end
 
@@ -106,4 +162,39 @@ impl Codec {
 
 fn main() {
     println!("hello")
+}
+
+mod tests {
+    use std::{cell::RefCell, rc::Rc};
+
+    use crate::{Codec, TreeNode};
+
+    #[test]
+    fn test_inorder_preorder() {
+        let left_child = Rc::new(RefCell::new(TreeNode {
+            val: 1,
+            left: None,
+            right: None,
+        }));
+
+        let right_child = Rc::new(RefCell::new(TreeNode {
+            val: 3,
+            left: None,
+            right: None,
+        }));
+
+        let root = Rc::new(RefCell::new(TreeNode {
+            val: 2,
+            left: Some(left_child.clone()),
+            right: Some(right_child.clone()),
+        }));
+        let arr_inorder = Rc::new(RefCell::new(vec![]));
+        let arr_preorder = Rc::new(RefCell::new(vec![]));
+        Codec::in_order(Some(Rc::clone(&root)), Rc::clone(&arr_inorder));
+        Codec::pre_order(Some(Rc::clone(&root)), Rc::clone(&arr_preorder));
+        println!("inorder: {:?}", arr_inorder);
+        println!("preorder: {:?}", arr_preorder);
+        assert_eq!(arr_inorder.borrow().as_ref(), vec![1, 2, 3]);
+        assert_eq!(arr_preorder.borrow().as_ref(), vec![2, 1, 3]);
+    }
 }
