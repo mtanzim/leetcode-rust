@@ -87,7 +87,23 @@ impl Codec {
     }
 
     fn serialize(&self, root: Option<Rc<RefCell<TreeNode>>>) -> String {
-        "sdsd".to_string()
+        let arr_inorder = Rc::new(RefCell::new(vec![]));
+        let arr_preorder = Rc::new(RefCell::new(vec![]));
+        Codec::in_order(root.clone(), Rc::clone(&arr_inorder));
+        Codec::pre_order(root.clone(), Rc::clone(&arr_preorder));
+        let inorder_s = arr_inorder
+            .borrow()
+            .iter()
+            .map(|&x| x.to_string())
+            .collect::<Vec<String>>()
+            .join(",");
+        let preorder_s = arr_preorder
+            .borrow()
+            .iter()
+            .map(|&x| x.to_string())
+            .collect::<Vec<String>>()
+            .join(",");
+        format!("inorder:{}\npreorder:{}", inorder_s, preorder_s)
     }
 
     fn in_order(node: Option<Rc<RefCell<TreeNode>>>, cur_vec: Rc<RefCell<Vec<i32>>>) {
@@ -170,7 +186,7 @@ mod tests {
     use crate::{Codec, TreeNode};
 
     #[test]
-    fn test_inorder_preorder() {
+    fn inorder_preorder() {
         let left_child = Rc::new(RefCell::new(TreeNode {
             val: 1,
             left: None,
@@ -196,5 +212,32 @@ mod tests {
         println!("preorder: {:?}", arr_preorder);
         assert_eq!(arr_inorder.borrow().as_ref(), vec![1, 2, 3]);
         assert_eq!(arr_preorder.borrow().as_ref(), vec![2, 1, 3]);
+    }
+
+    #[test]
+    fn serialize() {
+        let left_child = Rc::new(RefCell::new(TreeNode {
+            val: 1,
+            left: None,
+            right: None,
+        }));
+
+        let right_child = Rc::new(RefCell::new(TreeNode {
+            val: 3,
+            left: None,
+            right: None,
+        }));
+
+        let root = Rc::new(RefCell::new(TreeNode {
+            val: 2,
+            left: Some(left_child.clone()),
+            right: Some(right_child.clone()),
+        }));
+
+        let c = Codec::new();
+        assert_eq!(
+            c.serialize(Some(root.clone())),
+            "inorder:1,2,3\npreorder:2,1,3".to_string()
+        );
     }
 }
