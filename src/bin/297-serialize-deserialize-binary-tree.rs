@@ -110,7 +110,43 @@ impl Codec {
     }
 
     // TODO: study vec vs slices
-    fn preorder_invert(cur_vec: Vec<String>) -> (Option<Rc<RefCell<TreeNode>>>, Vec<String>) {
+
+    ///In Rust, a `Vec` and a slice (`&[T]`) are both related to collections of elements, but they have some key differences:
+    ///
+    ///1. **Ownership and Flexibility:**
+    ///   - `Vec<T>` is a owned collection that owns its elements. It can grow or shrink dynamically, and it has full control over its memory allocation.
+    ///   - `&[T]` (slice) is a view into a contiguous sequence of elements, borrowing the elements from another collection (such as a `Vec`, an array, or a slice itself). Slices do not own the underlying data and have a fixed size.
+    ///
+    ///2. **Memory Allocation:**
+    ///   - `Vec<T>` is capable of allocating memory on the heap to store its elements. It has a dynamic size and can be resized as needed.
+    ///   - `&[T]` does not allocate memory on its own. It references a contiguous sequence of elements in another collection.
+    ///
+    ///3. **Size and Mutability:**
+    ///   - `Vec<T>` can grow or shrink dynamically, and it is mutable. You can push, pop, and modify its elements.
+    ///   - `&[T]` is immutable by default. You cannot add or remove elements directly from a slice. It provides a read-only view of the underlying data.
+    ///
+    ///4. **Ownership and Borrowing:**
+    ///   - `Vec<T>` owns its data, and you can move ownership between variables.
+    ///   - `&[T]` borrows its data and does not own it. Slices are used for temporary, read-only access to data owned by another collection.
+    ///
+    ///Here's a simple example illustrating the differences:
+    ///
+    ///```rust
+    ///fn main() {
+    ///    // Vec
+    ///    let mut vec_example = vec![1, 2, 3];
+    ///    vec_example.push(4); // Can grow dynamically
+    ///    println!("Vec: {:?}", vec_example);
+    ///
+    ///    // Slice
+    ///    let slice_example: &[i32] = &vec_example[1..3]; // Borrowing a portion of the vec
+    ///    // slice_example.push(5); // This line would not compile; slices are immutable
+    ///    println!("Slice: {:?}", slice_example);
+    ///}
+    ///```
+    ///
+    ///In summary, `Vec` is a dynamic, owned collection with heap allocation capabilities, while a slice (`&[T]`) is a fixed-size, borrowed view into a contiguous sequence of elements. Both have their use cases based on whether dynamic resizing and ownership are needed.
+    fn preorder_invert(cur_vec: &[String]) -> (Option<Rc<RefCell<TreeNode>>>, &[String]) {
         if cur_vec.len() == 0 {
             return (None, cur_vec);
         }
@@ -120,13 +156,13 @@ impl Codec {
             None => (None, cur_vec),
             Some(token) => {
                 if token == "N" {
-                    return (None, cur_vec[1..].to_vec());
+                    return (None, &cur_vec[1..]);
                 }
                 let node_val = token.parse::<i32>().expect("cannot parse numbered token");
                 let next_vec = if cur_vec.len() > 0 {
-                    cur_vec[1..].to_vec()
+                    &cur_vec[1..]
                 } else {
-                    vec![]
+                    &[]
                 };
                 let (left_node, left_updated_vec) = Self::preorder_invert(next_vec);
                 let (right_node, right_updated_vec) = Self::preorder_invert(left_updated_vec);
@@ -144,7 +180,7 @@ impl Codec {
 
     fn deserialize(&self, data: String) -> Option<Rc<RefCell<TreeNode>>> {
         let preorder_vec: Vec<String> = data.split(",").map(|token| token.to_string()).collect();
-        Self::preorder_invert(preorder_vec).0
+        Self::preorder_invert(&preorder_vec[0..]).0
     }
 }
 
