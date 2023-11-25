@@ -146,33 +146,33 @@ impl Codec {
     ///```
     ///
     ///In summary, `Vec` is a dynamic, owned collection with heap allocation capabilities, while a slice (`&[T]`) is a fixed-size, borrowed view into a contiguous sequence of elements. Both have their use cases based on whether dynamic resizing and ownership are needed.
-    fn preorder_invert(cur_vec: &[String]) -> (Option<Rc<RefCell<TreeNode>>>, &[String]) {
-        if cur_vec.len() == 0 {
-            return (None, cur_vec);
+    fn preorder_invert(cur_slice: &[String]) -> (Option<Rc<RefCell<TreeNode>>>, &[String]) {
+        if cur_slice.len() == 0 {
+            return (None, cur_slice);
         }
 
-        let cur_token = cur_vec.get(0);
+        let cur_token = cur_slice.get(0);
         match cur_token {
-            None => (None, cur_vec),
+            None => (None, cur_slice),
             Some(token) => {
                 if token == "N" {
-                    return (None, &cur_vec[1..]);
+                    return (None, &cur_slice[1..]);
                 }
                 let node_val = token.parse::<i32>().expect("cannot parse numbered token");
-                let next_vec = if cur_vec.len() > 0 {
-                    &cur_vec[1..]
+                let next_slice = if cur_slice.len() > 0 {
+                    &cur_slice[1..]
                 } else {
                     &[]
                 };
-                let (left_node, left_updated_vec) = Self::preorder_invert(next_vec);
-                let (right_node, right_updated_vec) = Self::preorder_invert(left_updated_vec);
+                let (left_node, left_updated_slice) = Self::preorder_invert(next_slice);
+                let (right_node, right_updated_slice) = Self::preorder_invert(left_updated_slice);
                 (
                     Some(Rc::new(RefCell::new(TreeNode {
                         val: node_val,
                         left: left_node,
                         right: right_node,
                     }))),
-                    right_updated_vec,
+                    right_updated_slice,
                 )
             }
         }
