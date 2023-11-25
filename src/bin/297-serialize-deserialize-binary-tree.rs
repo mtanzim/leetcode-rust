@@ -109,22 +109,42 @@ impl Codec {
         }
     }
 
-    fn deserialize(&self, data: String) -> Option<Rc<RefCell<TreeNode>>> {
-        let splits: Vec<&str> = data.split("\n").collect();
-        let ineorder_raw = *splits.get(0).expect("failed to parse inorder raw");
-        let preorder_raw = *splits.get(1).expect("failed to parse preorder raw");
-        let inorder_clean = ineorder_raw.replace("inorder:", "");
-        let preorder_clean = preorder_raw.replace("preorder:", "");
-
-        if preorder_clean.len() == 0 || inorder_clean.len() == 0 {
-            return None;
+    // TODO: study vec vs slices
+    fn preorder_invert(cur_vec: Vec<String>) -> (Option<Rc<RefCell<TreeNode>>>, Vec<String>) {
+        if cur_vec.len() == 0 {
+            return (None, cur_vec);
         }
 
-        let preorder_vec: Vec<String> = preorder_clean
-            .split(",")
-            .map(|token| token.to_string())
-            .collect();
-        None
+        let cur_token = cur_vec.get(0);
+        match cur_token {
+            None => (None, cur_vec),
+            Some(token) => {
+                if token == "N" {
+                    return (None, cur_vec[1..].to_vec());
+                }
+                let node_val = token.parse::<i32>().expect("cannot parse numbered token");
+                let next_vec = if cur_vec.len() > 0 {
+                    cur_vec[1..].to_vec()
+                } else {
+                    vec![]
+                };
+                let (left_node, left_updated_vec) = Self::preorder_invert(next_vec);
+                let (right_node, right_updated_vec) = Self::preorder_invert(left_updated_vec);
+                (
+                    Some(Rc::new(RefCell::new(TreeNode {
+                        val: node_val,
+                        left: left_node,
+                        right: right_node,
+                    }))),
+                    right_updated_vec,
+                )
+            }
+        }
+    }
+
+    fn deserialize(&self, data: String) -> Option<Rc<RefCell<TreeNode>>> {
+        let preorder_vec: Vec<String> = data.split(",").map(|token| token.to_string()).collect();
+        Self::preorder_invert(preorder_vec).0
     }
 }
 
@@ -148,7 +168,7 @@ mod tests {
     use crate::{Codec, TreeNode};
 
     #[test]
-    fn inorder_preorder() {
+    fn preorder() {
         let left_child = Rc::new(RefCell::new(TreeNode {
             val: 1,
             left: None,
@@ -169,7 +189,10 @@ mod tests {
         let arr_preorder = Rc::new(RefCell::new(vec![]));
         Codec::preorder(Some(Rc::clone(&root)), Rc::clone(&arr_preorder));
         println!("preorder: {:?}", arr_preorder);
-        assert_eq!(arr_preorder.borrow().as_ref(), vec!["2", "1", "N", "N", "3", "N", "N"]);
+        assert_eq!(
+            arr_preorder.borrow().as_ref(),
+            vec!["2", "1", "N", "N", "3", "N", "N"]
+        );
     }
 
     #[test]
@@ -193,10 +216,7 @@ mod tests {
         }));
 
         let c = Codec::new();
-        assert_eq!(
-            c.serialize(Some(root.clone())),
-            "inorder:1,2,3\npreorder:2,1,3".to_string()
-        );
+        assert_eq!(c.serialize(Some(root.clone())), "2,1,N,N,3,N,N".to_string());
     }
 
     #[test]
@@ -218,7 +238,7 @@ mod tests {
             left: Some(left_child.clone()),
             right: Some(right_child.clone()),
         }));
-        let serialized = "inorder:1,2,3\npreorder:2,1,3".to_string();
+        let serialized = "2,1,N,N,3,N,N".to_string();
         let tree = Some(root);
         let c = Codec::new();
         assert_eq!(c.deserialize(serialized), tree);
