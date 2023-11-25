@@ -87,102 +87,100 @@ impl Codec {
     }
 
     fn serialize(&self, root: Option<Rc<RefCell<TreeNode>>>) -> String {
-        let arr_inorder = Rc::new(RefCell::new(vec![]));
         let arr_preorder = Rc::new(RefCell::new(vec![]));
-        Codec::in_order(root.clone(), Rc::clone(&arr_inorder));
-        Codec::pre_order(root.clone(), Rc::clone(&arr_preorder));
-        let inorder_s = arr_inorder
-            .borrow()
-            .iter()
-            .map(|&x| x.to_string())
-            .collect::<Vec<String>>()
-            .join(",");
+        Codec::preorder(root.clone(), Rc::clone(&arr_preorder));
         let preorder_s = arr_preorder
             .borrow()
             .iter()
-            .map(|&x| x.to_string())
+            .map(|x| x.to_string())
             .collect::<Vec<String>>()
             .join(",");
-        format!("inorder:{}\npreorder:{}", inorder_s, preorder_s)
+        preorder_s
     }
 
-    fn in_order(node: Option<Rc<RefCell<TreeNode>>>, cur_vec: Rc<RefCell<Vec<i32>>>) {
+    fn preorder(node: Option<Rc<RefCell<TreeNode>>>, cur_vec: Rc<RefCell<Vec<String>>>) {
         match node {
-            None => return,
+            None => cur_vec.borrow_mut().push("N".to_string()),
             Some(node_rc) => {
-                Self::in_order(node_rc.borrow().left.clone(), cur_vec.clone());
-                cur_vec.borrow_mut().push(node_rc.borrow().val);
-                Self::in_order(node_rc.borrow().right.clone(), cur_vec.clone());
+                cur_vec.borrow_mut().push(node_rc.borrow().val.to_string());
+                Self::preorder(node_rc.borrow().left.clone(), cur_vec.clone());
+                Self::preorder(node_rc.borrow().right.clone(), cur_vec.clone());
             }
         }
     }
 
-    fn pre_order(node: Option<Rc<RefCell<TreeNode>>>, cur_vec: Rc<RefCell<Vec<i32>>>) {
-        match node {
-            None => return,
-            Some(node_rc) => {
-                cur_vec.borrow_mut().push(node_rc.borrow().val);
-                Self::pre_order(node_rc.borrow().left.clone(), cur_vec.clone());
-                Self::pre_order(node_rc.borrow().right.clone(), cur_vec.clone());
+    // TODO: study vec vs slices
+
+    ///In Rust, a `Vec` and a slice (`&[T]`) are both related to collections of elements, but they have some key differences:
+    ///
+    ///1. **Ownership and Flexibility:**
+    ///   - `Vec<T>` is a owned collection that owns its elements. It can grow or shrink dynamically, and it has full control over its memory allocation.
+    ///   - `&[T]` (slice) is a view into a contiguous sequence of elements, borrowing the elements from another collection (such as a `Vec`, an array, or a slice itself). Slices do not own the underlying data and have a fixed size.
+    ///
+    ///2. **Memory Allocation:**
+    ///   - `Vec<T>` is capable of allocating memory on the heap to store its elements. It has a dynamic size and can be resized as needed.
+    ///   - `&[T]` does not allocate memory on its own. It references a contiguous sequence of elements in another collection.
+    ///
+    ///3. **Size and Mutability:**
+    ///   - `Vec<T>` can grow or shrink dynamically, and it is mutable. You can push, pop, and modify its elements.
+    ///   - `&[T]` is immutable by default. You cannot add or remove elements directly from a slice. It provides a read-only view of the underlying data.
+    ///
+    ///4. **Ownership and Borrowing:**
+    ///   - `Vec<T>` owns its data, and you can move ownership between variables.
+    ///   - `&[T]` borrows its data and does not own it. Slices are used for temporary, read-only access to data owned by another collection.
+    ///
+    ///Here's a simple example illustrating the differences:
+    ///
+    ///```rust
+    ///fn main() {
+    ///    // Vec
+    ///    let mut vec_example = vec![1, 2, 3];
+    ///    vec_example.push(4); // Can grow dynamically
+    ///    println!("Vec: {:?}", vec_example);
+    ///
+    ///    // Slice
+    ///    let slice_example: &[i32] = &vec_example[1..3]; // Borrowing a portion of the vec
+    ///    // slice_example.push(5); // This line would not compile; slices are immutable
+    ///    println!("Slice: {:?}", slice_example);
+    ///}
+    ///```
+    ///
+    ///In summary, `Vec` is a dynamic, owned collection with heap allocation capabilities, while a slice (`&[T]`) is a fixed-size, borrowed view into a contiguous sequence of elements. Both have their use cases based on whether dynamic resizing and ownership are needed.
+    fn preorder_invert(cur_vec: &[String]) -> (Option<Rc<RefCell<TreeNode>>>, &[String]) {
+        if cur_vec.len() == 0 {
+            return (None, cur_vec);
+        }
+
+        let cur_token = cur_vec.get(0);
+        match cur_token {
+            None => (None, cur_vec),
+            Some(token) => {
+                if token == "N" {
+                    return (None, &cur_vec[1..]);
+                }
+                let node_val = token.parse::<i32>().expect("cannot parse numbered token");
+                let next_vec = if cur_vec.len() > 0 {
+                    &cur_vec[1..]
+                } else {
+                    &[]
+                };
+                let (left_node, left_updated_vec) = Self::preorder_invert(next_vec);
+                let (right_node, right_updated_vec) = Self::preorder_invert(left_updated_vec);
+                (
+                    Some(Rc::new(RefCell::new(TreeNode {
+                        val: node_val,
+                        left: left_node,
+                        right: right_node,
+                    }))),
+                    right_updated_vec,
+                )
             }
         }
     }
 
     fn deserialize(&self, data: String) -> Option<Rc<RefCell<TreeNode>>> {
-        let splits: Vec<&str> = data.split("\n").collect();
-        let ineorder_raw = *splits.get(0).expect("failed to parse inorder raw");
-        let preorder_raw = *splits.get(1).expect("failed to parse preorder raw");
-        let inorder_clean = ineorder_raw.replace("inorder:", "");
-        let preorder_clean = preorder_raw.replace("preorder:", "");
-
-        if preorder_clean.len() == 0 || inorder_clean.len() == 0 {
-            return None;
-        }
-
-        let inorder_vec: Vec<i32> = inorder_clean
-            .split(",")
-            .map(|token| token.parse::<i32>().expect("failed to parse inorder token"))
-            .collect();
-        let preorder_vec: Vec<i32> = preorder_clean
-            .split(",")
-            .map(|token| token.parse::<i32>().expect("failed to parse inorder token"))
-            .collect();
-        Self::build_tree(preorder_vec, inorder_vec)
-    }
-
-    // TODO: this assumes all values are unique and thus the solution does not always work
-    // ie: [3,2,4,3]
-    fn buiild_tree_traverse(
-        preorder: Vec<i32>,
-        inorder: Vec<i32>,
-    ) -> (Option<Rc<RefCell<TreeNode>>>, Vec<i32>) {
-        if preorder.len() == 0 || inorder.len() == 0 {
-            return (None, preorder.clone());
-        }
-
-        let root_val = preorder[0];
-        let next_pre_order = preorder.clone()[1..].to_vec();
-        let inorder_cut = inorder
-            .iter()
-            .position(|&v| v == root_val)
-            .expect("failed to find item in order, invalid case");
-        let left_inorder: Vec<i32> = inorder.clone()[..inorder_cut].to_vec();
-        let (left_tree, left_updated_pre_order) =
-            Self::buiild_tree_traverse(next_pre_order.clone(), left_inorder.clone());
-        let right_inorder: Vec<i32> = inorder.clone()[inorder_cut + 1..].to_vec();
-        let (right_tree, right_updated_pre_order) =
-            Self::buiild_tree_traverse(left_updated_pre_order.clone(), right_inorder.clone());
-        let node = TreeNode {
-            val: root_val,
-            left: left_tree,
-            right: right_tree,
-        };
-        let tree = Some(Rc::new(RefCell::new(node)));
-        (tree, right_updated_pre_order)
-    }
-    // TODO: preorder needs to be globally mutable?
-    fn build_tree(preorder: Vec<i32>, inorder: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {
-        Self::buiild_tree_traverse(preorder, inorder).0
+        let preorder_vec: Vec<String> = data.split(",").map(|token| token.to_string()).collect();
+        Self::preorder_invert(&preorder_vec[0..]).0
     }
 }
 
@@ -206,7 +204,7 @@ mod tests {
     use crate::{Codec, TreeNode};
 
     #[test]
-    fn inorder_preorder() {
+    fn preorder() {
         let left_child = Rc::new(RefCell::new(TreeNode {
             val: 1,
             left: None,
@@ -224,14 +222,13 @@ mod tests {
             left: Some(left_child.clone()),
             right: Some(right_child.clone()),
         }));
-        let arr_inorder = Rc::new(RefCell::new(vec![]));
         let arr_preorder = Rc::new(RefCell::new(vec![]));
-        Codec::in_order(Some(Rc::clone(&root)), Rc::clone(&arr_inorder));
-        Codec::pre_order(Some(Rc::clone(&root)), Rc::clone(&arr_preorder));
-        println!("inorder: {:?}", arr_inorder);
+        Codec::preorder(Some(Rc::clone(&root)), Rc::clone(&arr_preorder));
         println!("preorder: {:?}", arr_preorder);
-        assert_eq!(arr_inorder.borrow().as_ref(), vec![1, 2, 3]);
-        assert_eq!(arr_preorder.borrow().as_ref(), vec![2, 1, 3]);
+        assert_eq!(
+            arr_preorder.borrow().as_ref(),
+            vec!["2", "1", "N", "N", "3", "N", "N"]
+        );
     }
 
     #[test]
@@ -255,10 +252,7 @@ mod tests {
         }));
 
         let c = Codec::new();
-        assert_eq!(
-            c.serialize(Some(root.clone())),
-            "inorder:1,2,3\npreorder:2,1,3".to_string()
-        );
+        assert_eq!(c.serialize(Some(root.clone())), "2,1,N,N,3,N,N".to_string());
     }
 
     #[test]
@@ -280,7 +274,7 @@ mod tests {
             left: Some(left_child.clone()),
             right: Some(right_child.clone()),
         }));
-        let serialized = "inorder:1,2,3\npreorder:2,1,3".to_string();
+        let serialized = "2,1,N,N,3,N,N".to_string();
         let tree = Some(root);
         let c = Codec::new();
         assert_eq!(c.deserialize(serialized), tree);
