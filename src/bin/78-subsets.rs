@@ -51,20 +51,22 @@ impl Solution {
         if nums.len() == 0 {
             return vec![vec![]];
         }
-        if nums.len() == 1 {
-            return vec![vec![nums[0]], vec![]];
-        }
-        let head = nums
-            .get(0)
-            .expect("fall through, I'm not a good enough rust dev yet :(");
+
+        let head = nums[0];
         let tail = &nums[1..];
-        let left = Self::subsets(vec![*head]);
-        let middle = vec![nums[0..].to_vec()];
-        let right = Self::subsets(tail.to_vec());
-        left.iter()
+        let tail_vecs = Self::subsets(tail.to_vec());
+        let tail_vecs_with_head: Vec<Vec<i32>> = tail_vecs
+            .iter()
+            .map(|v| {
+                let mut new_vec = vec![head];
+                new_vec.extend(v);
+                new_vec
+            })
+            .collect();
+        tail_vecs
+            .iter()
             .cloned()
-            .chain(middle.iter().cloned())
-            .chain(right.iter().cloned())
+            .chain(tail_vecs_with_head.iter().cloned())
             .collect()
     }
 }
@@ -80,7 +82,14 @@ mod tests {
     #[test]
     fn base_case() {
         let d = vec![1];
-        let expect = vec![vec![1], vec![]];
+        let expect = vec![vec![], vec![1]];
+        assert_eq!(Solution::subsets(d), expect)
+    }
+
+    #[test]
+    fn base_case_plus_1() {
+        let d = vec![1, 2];
+        let expect = vec![vec![], vec![2], vec![1], vec![1, 2]];
         assert_eq!(Solution::subsets(d), expect)
     }
 
@@ -89,12 +98,12 @@ mod tests {
         let d = vec![1, 2, 3];
         let expect = vec![
             vec![],
-            vec![1],
-            vec![2],
-            vec![1, 2],
             vec![3],
-            vec![1, 3],
+            vec![2],
             vec![2, 3],
+            vec![1],
+            vec![1, 3],
+            vec![1, 2],
             vec![1, 2, 3],
         ];
         assert_eq!(Solution::subsets(d), expect)
