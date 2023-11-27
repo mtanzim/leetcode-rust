@@ -86,7 +86,7 @@ impl Solution {
             );
         }
         if lists.len() == 1 {
-            return lists.get(1).expect("cannot find first list").clone();
+            return lists.get(0).expect("cannot find first list").clone();
         }
         let mid = lists.len() / 2;
         let left_lists = lists[0..mid].to_vec();
