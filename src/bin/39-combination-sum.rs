@@ -63,42 +63,42 @@
  *
  */
 
-
+//  TODO: come back to this one :/
 // @lc code=start
 use std::{cell::RefCell, rc::Rc};
+struct Holders {
+    target: i32,
+    candidates: Vec<i32>,
+}
 impl Solution {
     fn dfs(
         i: usize,
         cur: &mut Vec<i32>,
         total: i32,
-        target: i32,
-        candidates: &Vec<i32>,
         res: Rc<RefCell<Vec<Vec<i32>>>>,
+        holders: &Holders,
     ) {
-        if total == target {
+        if total == holders.target {
             let mut cur_res = res.borrow_mut();
             cur_res.push(cur.clone());
             return;
         }
-        if i >= candidates.len() || total > target {
+        if i >= holders.candidates.len() || total > holders.target {
             return;
         }
-        let v = candidates[i];
+        let v = holders.candidates[i];
         cur.push(v);
-        Self::dfs(
-            i,
-            cur,
-            total + v,
-            target,
-            candidates,
-            res.clone(),
-        );
+        Self::dfs(i, cur, total + v, res.clone(), holders);
         cur.pop();
-        Self::dfs(i + 1, cur, total, target, candidates, res.clone())
+        Self::dfs(i + 1, cur, total, res.clone(), holders)
     }
     pub fn combination_sum(candidates: Vec<i32>, target: i32) -> Vec<Vec<i32>> {
         let res: Rc<RefCell<Vec<Vec<i32>>>> = Rc::new(RefCell::new(vec![]));
-        Self::dfs(0, &mut vec![], 0, target, &candidates, res.clone());
+        let h = Holders {
+            candidates: candidates,
+            target: target,
+        };
+        Self::dfs(0, &mut vec![], 0, res.clone(), &h);
         let results = res.borrow();
         results.to_vec()
     }
@@ -117,7 +117,6 @@ fn main() {
 
 mod tests {
     use crate::Solution;
-
 
     #[test]
     fn basic() {
