@@ -10,7 +10,7 @@ impl Solution {
     fn bfs(grid: &mut Vec<Vec<i32>>) -> i32 {
         let row_len = grid.len() as i32;
         let col_len = grid[0].len() as i32;
-        let mut visited: HashSet<(i32, i32)> = HashSet::new();
+        // let mut visited: HashSet<(i32, i32)> = HashSet::new();
         let mut queue: VecDeque<(i32, i32)> = VecDeque::new();
         for (row_idx, row) in grid.iter().enumerate() {
             for (col_idx, &value) in row.iter().enumerate() {
@@ -38,18 +38,22 @@ impl Solution {
                         if *col_idx < 0 || *col_idx >= col_len {
                             return false;
                         }
+                        if grid[*row_idx as usize][*col_idx as usize] != FRESH {
+                          return false;
+                        }
                         return true;
                     })
                     .map(|(r_idx, c_idx)| (*r_idx as i32, *c_idx as i32))
-                    .filter(|n| !visited.contains(n))
                     .collect();
 
+                if valid_ns.len() > 0 {
+                  day_counter += 1;
+
+                }
                 for &n in valid_ns.iter() {
                     let (ri, ci) = n;
                     grid[ri as usize][ci as usize] = ROTTEN;
-                    visited.insert(n);
                     queue.push_back(n);
-                    day_counter += 1;
                 }
             } else {
                 break;
@@ -79,6 +83,6 @@ mod tests {
     #[test]
     fn basic() {
         let grid = vec![vec![2, 1, 1], vec![1, 1, 0], vec![0, 1, 1]];
-        assert_eq!(Solution::oranges_rotting(grid), 43)
+        assert_eq!(Solution::oranges_rotting(grid), 4)
     }
 }
