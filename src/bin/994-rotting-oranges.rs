@@ -1,4 +1,4 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::VecDeque;
 
 struct Solution;
 
@@ -14,7 +14,6 @@ impl Solution {
             .iter()
             .map(|r| r.iter().filter(|&&orange| orange == FRESH).count())
             .sum();
-        // let mut visited: HashSet<(i32, i32)> = HashSet::new();
         let mut queue: VecDeque<(i32, i32)> = VecDeque::new();
         for (row_idx, row) in grid.iter().enumerate() {
             for (col_idx, &value) in row.iter().enumerate() {
@@ -35,7 +34,7 @@ impl Solution {
             let queue_cur_len = queue.len();
             for _ in 0..queue_cur_len {
                 let (cur_row_idx, cur_col_idx) =
-                    queue.pop_front().expect("invalid queue condition");
+                    queue.pop_front().expect("invalid pop on queue");
                 let left_n = (cur_row_idx - 1, cur_col_idx);
                 let right_n = (cur_row_idx + 1, cur_col_idx);
                 let top_n = (cur_row_idx, cur_col_idx - 1);
@@ -44,14 +43,14 @@ impl Solution {
                 let valid_ns: Vec<(i32, i32)> = all_ns
                     .iter()
                     .filter(|&n| {
-                        let (row_idx, col_idx) = n;
-                        if *row_idx < 0 || *row_idx >= row_len {
+                        let (row_idx, col_idx) = *n;
+                        if row_idx < 0 || row_idx >= row_len {
                             return false;
                         }
-                        if *col_idx < 0 || *col_idx >= col_len {
+                        if col_idx < 0 || col_idx >= col_len {
                             return false;
                         }
-                        if grid[*row_idx as usize][*col_idx as usize] != FRESH {
+                        if grid[row_idx as usize][col_idx as usize] != FRESH {
                             return false;
                         }
                         return true;
