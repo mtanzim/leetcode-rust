@@ -10,6 +10,10 @@ impl Solution {
     fn bfs(grid: &mut Vec<Vec<i32>>) -> i32 {
         let row_len = grid.len() as i32;
         let col_len = grid[0].len() as i32;
+        let mut fresh_left: usize = grid
+            .iter()
+            .map(|r| r.iter().filter(|&&orange| orange == FRESH).count())
+            .sum();
         // let mut visited: HashSet<(i32, i32)> = HashSet::new();
         let mut queue: VecDeque<(i32, i32)> = VecDeque::new();
         for (row_idx, row) in grid.iter().enumerate() {
@@ -21,8 +25,17 @@ impl Solution {
         }
 
         let mut day_counter = 0;
-        while !queue.is_empty() {
-            if let Some((cur_row_idx, cur_col_idx)) = queue.pop_front() {
+        loop {
+            if fresh_left <= 0 {
+                break;
+            }
+            if queue.is_empty() {
+                break;
+            }
+            let queue_cur_len = queue.len();
+            for _ in 0..queue_cur_len {
+                let (cur_row_idx, cur_col_idx) =
+                    queue.pop_front().expect("invalid queue condition");
                 let left_n = (cur_row_idx - 1, cur_col_idx);
                 let right_n = (cur_row_idx + 1, cur_col_idx);
                 let top_n = (cur_row_idx, cur_col_idx - 1);
@@ -39,40 +52,31 @@ impl Solution {
                             return false;
                         }
                         if grid[*row_idx as usize][*col_idx as usize] != FRESH {
-                          return false;
+                            return false;
                         }
                         return true;
                     })
                     .map(|(r_idx, c_idx)| (*r_idx as i32, *c_idx as i32))
                     .collect();
 
-                if valid_ns.len() > 0 {
-                  day_counter += 1;
-
-                }
                 for &n in valid_ns.iter() {
                     let (ri, ci) = n;
                     grid[ri as usize][ci as usize] = ROTTEN;
+                    fresh_left -= 1;
                     queue.push_back(n);
                 }
-            } else {
-                break;
             }
+            day_counter += 1
+        }
+        if fresh_left > 0 {
+            return -1;
         }
         day_counter
     }
 
     pub fn oranges_rotting(grid: Vec<Vec<i32>>) -> i32 {
         let mut cloned_grid = grid.clone();
-        let days = Self::bfs(&mut cloned_grid);
-        let fresh_left: usize = cloned_grid
-            .iter()
-            .map(|r| r.iter().filter(|&&orange| orange == FRESH).count())
-            .sum();
-        if fresh_left > 0 {
-            return -1;
-        }
-        days
+        Self::bfs(&mut cloned_grid) as i32
     }
 }
 
