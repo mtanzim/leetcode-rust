@@ -80,6 +80,11 @@ impl Solution {
     }
 }
 
+fn main() {
+    let grid = vec![vec![2, 1, 1], vec![1, 1, 0], vec![0, 1, 1]];
+    println!("{:?}: {}", grid.clone(), Solution::oranges_rotting(grid))
+}
+
 #[cfg(test)]
 mod tests {
     use crate::Solution;
